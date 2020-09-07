@@ -12,6 +12,7 @@
     }
   },
   "rules": {
-    "new-cap": "off"
+    "new-cap": "off",
+    "max-len": [1, 125, 2]
   }
 }
