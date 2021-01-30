@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -19,43 +20,22 @@ import '@/css/main.css';
 
 let scene;
 let camera;
+let controls;
 let renderer;
+
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
 
 let mesh;
 let floor;
 let floorTexture;
 
-const keyboard = {};
-
-const keyboardController = () => {
-  /* W KEY */
-  if (keyboard[87]) {
-    camera.position.x -= Math.sin(camera.rotation.y) * Player.speed.walk;
-    camera.position.z -= Math.cos(camera.rotation.y) * Player.speed.walk;
-  }
-  /* S KEY */
-  if (keyboard[83]) {
-    camera.position.x += Math.sin(camera.rotation.y) * Player.speed.walk;
-    camera.position.z += Math.cos(camera.rotation.y) * Player.speed.walk;
-  }
-  /* A KEY */
-  if (keyboard[65]) {
-    camera.position.x += Math.sin(camera.rotation.y - Math.PI / 2) * Player.speed.walk;
-    camera.position.z += Math.cos(camera.rotation.y - Math.PI / 2) * Player.speed.walk;
-  }
-  /* D KEY */
-  if (keyboard[68]) {
-    camera.position.x -= Math.sin(camera.rotation.y - Math.PI / 2) * Player.speed.walk;
-    camera.position.z -= Math.cos(camera.rotation.y - Math.PI / 2) * Player.speed.walk;
-  }
-  /* LEFT ARROW */
-  if (keyboard[37]) {
-    camera.rotation.y += Math.PI * Player.speed.turn;
-  }
-  /* RIGHT ARROW */
-  if (keyboard[39]) {
-    camera.rotation.y -= Math.PI * Player.speed.turn;
-  }
+const movement = {
+  forward: false,
+  backward: false,
+  left: false,
+  right: false,
 };
 
 const bindEventListeners = () => {
@@ -64,9 +44,6 @@ const bindEventListeners = () => {
 
   const onMouseMove = (event) => {
     event.preventDefault();
-
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObjects(scene.children, true);
@@ -77,9 +54,14 @@ const bindEventListeners = () => {
         document.getElementById('three.js').style.cursor = 'pointer';
       }
     });
+
+    // handleMouseLook(event);
   };
 
   document.body.addEventListener('mousemove', onMouseMove);
+  document.body.addEventListener('click', () => {
+    controls.lock();
+  }, false);
 
   const onMouseClick = (event) => {
     event.preventDefault();
@@ -163,9 +145,42 @@ const drawScene = () => {
 };
 
 const animate = () => {
+  /* INIT FRAME */
   requestAnimationFrame(animate);
+
+  /* UPDATE GEOMETRY */
+  const time = performance.now();
+
+  if (controls.isLocked === true) {
+    const delta = (time - prevTime) / 1000;
+
+    velocity.x -= velocity.x * Player.speed.walk * delta;
+    velocity.z -= velocity.z * Player.speed.walk * delta;
+
+    velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+    direction.z = Number(movement.forward) - Number(movement.backward);
+    direction.x = Number(movement.right) - Number(movement.left);
+    direction.normalize(); // this ensures consistent movements in all directions
+
+    if (movement.forward || movement.backward) velocity.z -= direction.z * 400.0 * delta;
+    if (movement.left || movement.right) velocity.x -= direction.x * 400.0 * delta;
+
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+
+    controls.getObject().position.y += (velocity.y * delta); // new behavior
+
+    if (controls.getObject().position.y < Player.height) {
+      velocity.y = 0;
+      controls.getObject().position.y = Player.height;
+    }
+  }
+
   mesh.rotation.y += 0.01;
-  keyboardController();
+
+  /* UPDATE RENDER */
+  prevTime = time;
   renderer.render(scene, camera);
 };
 
@@ -179,8 +194,10 @@ const init = () => {
   );
   camera.position.set(0, Player.height, 5);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  controls = new PointerLockControls(camera, document.body);
+  scene.add(controls.getObject());
 
+  renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor('#ff8fa7');
@@ -210,11 +227,49 @@ window.addEventListener('resize', onWindowResize, false);
 
 /* Keyboard I/O */
 const keyDown = (event) => {
-  keyboard[event.keyCode] = true;
+  switch (event.keyCode) {
+    /* W KEY */
+    case 87:
+      movement.forward = true;
+      break;
+    /* S KEY */
+    case 83:
+      movement.backward = true;
+      break;
+    /* A KEY */
+    case 65:
+      movement.left = true;
+      break;
+    /* D KEY */
+    case 68:
+      movement.right = true;
+      break;
+    default:
+      break;
+  }
 };
 
 const keyUp = (event) => {
-  keyboard[event.keyCode] = false;
+  switch (event.keyCode) {
+    /* W KEY */
+    case 87:
+      movement.forward = false;
+      break;
+    /* S KEY */
+    case 83:
+      movement.backward = false;
+      break;
+    /* A KEY */
+    case 65:
+      movement.left = false;
+      break;
+    /* D KEY */
+    case 68:
+      movement.right = false;
+      break;
+    default:
+      break;
+  }
 };
 
 window.addEventListener('keydown', keyDown);

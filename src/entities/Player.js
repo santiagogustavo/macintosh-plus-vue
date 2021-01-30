@@ -1,7 +1,8 @@
 export default {
   height: 1.8,
   speed: {
-    walk: 0.1,
-    turn: 0.01,
+    walk: 50,
+    sprint: 40,
+    look: 1,
   },
 };
