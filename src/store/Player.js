@@ -1,4 +1,5 @@
 export default {
+  namespaced: true,
   state: () => ({
     height: 1.8,
     speed: {
