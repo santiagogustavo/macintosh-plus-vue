@@ -1,4 +1,8 @@
-import { createApp } from 'troisjs'
-import App from './App.vue'
+import { createApp } from 'troisjs';
 
-createApp(App).mount('#app')
+import store from '@/store';
+import App from '@/App.vue';
+
+createApp(App)
+  .use(store)
+  .mount('#app');

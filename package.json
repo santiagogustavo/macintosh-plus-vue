@@ -14,7 +14,8 @@
   "dependencies": {
     "three": "^0.134.0",
     "troisjs": "^0.3.1",
-    "vue": "^3.0.11"
+    "vue": "^3.0.11",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@commitlint/cli": "^13.2.1",
