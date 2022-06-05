@@ -1,5 +1,9 @@
 <template>
-  <div :class="className" />
+  <div :class="className">
+    <div class="loading__text">
+      ＬＯＡＤＩＮＧ
+    </div>
+  </div>
 </template>
 
 <script>
@@ -34,6 +38,10 @@ export default {
   background: #ff8fa7;
   transition: opacity 250ms ease;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   &--visible {
     opacity: 1;
   }
@@ -41,6 +49,18 @@ export default {
   &--hidden {
     opacity: 0;
     pointer-events: none;
+  }
+
+  &__text {
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 32px;
+    color: #63ffac;
+    text-shadow: 2px 2px black;
+    padding: 16px 32px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid gray;
   }
 }
 </style>
